@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <style type="text/css">
+    html, body {
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: "微软雅黑";
+      font-size: 13px;
+      line-height: 1.4;
+      background-color: #3F3F3F;
+      color: #E0E0E0;
+    }
+    a {
+      padding: 2px 10px;
+      border-radius: 5px;
+      background-color: rgba(255, 255, 255, 0.2);
+      color: #CCC;
+      text-decoration: none;
+    }
+    a:hover {
+      background-color: rgba(255, 255, 255, 0.35);
+      color: #FFF;
+      text-decoration: none;
+    }
+    .code {
+      font-family: "Consolas";
+      line-height: 18px;
+    }
+    .child {
+      padding-left: 15px;
+      border-left: 1px solid #4F4F4F;
+    }
+    .key {
+      color: #E08FBF;
+    }
+    .parsed {
+      color: #FF0890;
+      font-weight: bold;
+      font-style: italic;
+    }
+    textarea {
+      width: 100%;
+      border: 1px solid #6F6F6F;
+      background-color: #606060;
+      color: #E0E0E0;
+    }
+    #showPanel {
+      margin: 10px;
+    }
+    .hide {
+      display: none;
+    }
+    .show {
+      display: block;
+    }
+    .collapse {
+      color: #6F6F6F;
+      cursor: pointer;
+      padding-left: 5px;
+      font-size: 9px;
+      line-height: 18px;
+    }
+    .title:hover {
+      background: rgba(255, 255, 255, 0.1)
+    }
+    #controllers {
+      padding: 10px;
+      position: fixed;
+      overflow: hidden;
+      background-color: #111;
+      width: 100%;
+      height: 25px;
+      z-index: 1000;
+    }
+    #container {
+      position: relative;
+      top: 45px;
+      padding: 10px;
+    }
+  </style>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+</head>
+<body>
+  <div id="controllers">
+    <a href="javascript:showJson()">Show Json</a>
+    <a href="#container">To the Top</a>
+    <a href="#rawJson">To the Input</a>
+    <a href="javascript:openNew()">Open new page</a>
+    <input type="checkbox" id="deepParseCheckbox" checked="checked" /><label for="deepParseCheckbox" class="form-group">DeepParse</label>
+    (Shown in a <span class="parsed">DeepParsed</span> key style.)
+  </div>
+  <div id="container">
+    <div id="showPanel" class="code"></div>
+    <div>
+      <textarea id="rawJson" class="code" rows="20"></textarea>
+    </div>
+  </div>
+</body>
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
+<script type="text/javascript">
+  function openNew() {
+    window.open(window.location.href);
+  }
+
+  function showJson() {
+    try {
+      var jsonString = $("#rawJson").val();
+      var obj = JSON.parse(jsonString);
+      var container = $("<div></div>");
+      createVO(container, obj, 0);
+      $("#showPanel").html("");
+      $("#showPanel").append(container);
+      initCollapse();
+    } catch (e) {
+      $("#showPanel").html("Error: " + e);
+    }
+  }
+
+  function initCollapse() {
+    $("#showPanel").find(".collapse").click(function () {
+      $(this).toggleClass("fa-plus-square fa-minus-square");
+      $(this).parent().next().toggleClass("hide show");
+    });
+  }
+
+  function createVO(parent, obj, idx, name, keyclass) {
+    var container = $("<div></div>");
+    parent.append(container);
+    var colon = ": ";
+    if (!name) {
+      name = "";
+      colon = "";
+    }
+    var comma = "";
+    if (idx > 0) {
+      comma = ",";
+    }
+    if (!keyclass) {
+      keyclass = "key";
+    }
+    if (Array.isArray(obj)) {
+      container.append("<div class='title'>" + comma + "<span class='" + keyclass + "'>"+ name + "</span>" + colon + "[<span class='collapse fa fa-minus-square'></span></div>");
+      container.append("<div class='child show'></div>");
+      container.append("<div>]</div>");
+      var childContainer = $(container.find(".child")[0]);
+      var childKeys = Object.keys(obj);
+      if (!childKeys || !childKeys.length) {
+        return;
+      }
+      $(childKeys).each(function (i, key) {
+        createVO(childContainer, obj[key], i);
+      });
+      return;
+    } else if (typeof(obj) == "object") {
+      container.append("<div class='title'>" + comma + "<span class='" + keyclass + "'>"+ name + "</span>" + colon + "{<span class='collapse fa fa-minus-square'></span></div>");
+      container.append("<div class='child show'></div>");
+      container.append("<div>}</div>");
+      var childContainer = $(container.find(".child")[0]);
+      var childKeys = Object.keys(obj);
+      if (!childKeys || !childKeys.length) {
+        return;
+      }
+      $(childKeys).each(function (i, key) {
+        createVO(childContainer, obj[key], i, key);
+      });
+      return;
+    }
+    if (typeof(obj) != "number" && typeof(obj) != "boolean") {
+      try {
+        if ($("#deepParseCheckbox").is(":checked")) {
+          var subobj = JSON.parse(obj + "");
+          if (typeof(subobj) == "object") {
+            createVO(parent, subobj, idx, name, "parsed");
+            console.log(subobj);
+            return;
+          }
+        }
+      } catch (e) {
+      }
+      obj = "\"" + obj + "\"";
+    }
+    container.append("<div class='title'>" + comma + "<span class='" + keyclass + "'>" + name + "</span>" + colon + obj + "</div>");
+  }
+</script>
+</html>
