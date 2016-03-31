@@ -101,6 +101,7 @@
   </div>
 </body>
 <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.min.js"></script>
 <script type="text/javascript">
   function openNew() {
     window.open(window.location.href);
@@ -134,6 +135,8 @@
     if (!name) {
       name = "";
       colon = "";
+    } else {
+      name = Mustache.render("{{text}}", {"text": name});
     }
     var comma = "";
     if (idx > 0) {
@@ -175,13 +178,12 @@
           var subobj = JSON.parse(obj + "");
           if (typeof(subobj) == "object") {
             createVO(parent, subobj, idx, name, "parsed");
-            console.log(subobj);
             return;
           }
         }
       } catch (e) {
       }
-      obj = "\"" + obj + "\"";
+      obj = Mustache.render("{{text}}", {"text": "\"" + obj + "\""});
     }
     container.append("<div class='title'>" + comma + "<span class='" + keyclass + "'>" + name + "</span>" + colon + obj + "</div>");
   }
